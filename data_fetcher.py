@@ -40,6 +40,98 @@ class MacroDataFetcher:
                 'date': latest['date']
             }
         return None
+
+    def fetch_fred_series_history(self, series_id, days=365):
+        """
+        Fetch time series from FRED for the last N days.
+        Returns list of {date, value} sorted ascending by date (oldest first).
+        Skips observations with missing (.) values.
+        """
+        if not self.fred_api_key:
+            return []
+        end = datetime.now()
+        start = end - timedelta(days=days)
+        params = {
+            'series_id': series_id,
+            'api_key': self.fred_api_key,
+            'file_type': 'json',
+            'sort_order': 'asc',
+            'observation_start': start.strftime('%Y-%m-%d'),
+            'observation_end': end.strftime('%Y-%m-%d'),
+        }
+        try:
+            response = requests.get(self.fred_base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            out = []
+            for obs in data.get('observations', []):
+                v = obs.get('value')
+                if v is None or v == '.':
+                    continue
+                try:
+                    out.append({'date': obs['date'], 'value': float(v)})
+                except (ValueError, TypeError):
+                    continue
+            return out
+        except Exception:
+            return []
+
+    def fetch_inflation_yoy_history(self, days=365):
+        """Fetch CPI and return YoY % change for each month in range (last 12 months of YoY)."""
+        if not self.fred_api_key:
+            return []
+        # Need 13+ months of CPI to compute 12 months of YoY
+        params = {
+            'series_id': 'CPIAUCSL',
+            'api_key': self.fred_api_key,
+            'file_type': 'json',
+            'sort_order': 'asc',
+            'observation_start': (datetime.now() - timedelta(days=days + 400)).strftime('%Y-%m-%d'),
+            'observation_end': datetime.now().strftime('%Y-%m-%d'),
+        }
+        try:
+            response = requests.get(self.fred_base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            observations = data.get('observations', [])
+            out = []
+            for i in range(12, len(observations)):
+                cur = observations[i].get('value')
+                prev = observations[i - 12].get('value')
+                if cur and prev and cur != '.' and prev != '.':
+                    try:
+                        yoy = ((float(cur) - float(prev)) / float(prev)) * 100
+                        out.append({'date': observations[i]['date'], 'value': yoy})
+                    except (ValueError, TypeError):
+                        continue
+            return out[-24:] if len(out) > 24 else out  # cap to ~2 years
+        except Exception:
+            return []
+
+    def fetch_all_historical(self, days=365):
+        """
+        Fetch last 365 days of history for all 8 dashboard series.
+        Returns dict: metric_key -> list of {date, value} (ascending by date).
+        """
+        neutral = self.estimate_neutral_rate()
+        gdp = self.fetch_fred_series_history('A191RL1Q225SBEA', days)
+        inflation = self.fetch_inflation_yoy_history(days)
+        unemployment = self.fetch_fred_series_history('UNRATE', days)
+        ism_pmi = self.fetch_fred_series_history('MANEMP', days)
+        real_rate = self.fetch_fred_series_history('DFII10', days)
+        yield_spread = self.fetch_fred_series_history('T10Y2Y', days)
+        fed_funds = self.fetch_fred_series_history('FEDFUNDS', days)
+        fed_stance = [{'date': x['date'], 'value': x['value'] - neutral} for x in fed_funds]
+        return {
+            'gdp_growth': gdp,
+            'inflation': inflation,
+            'unemployment': unemployment,
+            'ism_pmi': ism_pmi,
+            'real_rate': real_rate,
+            'yield_spread': yield_spread,
+            'fed_funds': fed_funds,
+            'fed_stance': fed_stance,
+        }
     
     def fetch_gdp_growth(self):
         """
@@ -99,6 +191,46 @@ class MacroDataFetcher:
         result = self.fetch_fred_data('DFII10')
         return result['value'] if result else None
     
+    def fetch_unemployment_rate(self):
+        """
+        Fetch unemployment rate
+        Series: UNRATE (Unemployment Rate)
+        """
+        result = self.fetch_fred_data('UNRATE')
+        return result['value'] if result else None
+    
+    def fetch_ism_pmi(self):
+        """
+        Fetch ISM Manufacturing PMI
+        Series: MANEMP (ISM Manufacturing: PMI Composite Index)
+        """
+        result = self.fetch_fred_data('MANEMP')
+        return result['value'] if result else None
+    
+    def fetch_yield_spread_2_10(self):
+        """
+        Fetch 2Y-10Y Treasury yield spread
+        Series: T10Y2Y (10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity)
+        """
+        result = self.fetch_fred_data('T10Y2Y')
+        return result['value'] if result else None
+    
+    def fetch_fed_funds_rate(self):
+        """
+        Fetch effective federal funds rate
+        Series: FEDFUNDS (Effective Federal Funds Rate)
+        """
+        result = self.fetch_fred_data('FEDFUNDS')
+        return result['value'] if result else None
+    
+    def estimate_neutral_rate(self):
+        """
+        Estimate neutral rate (r*) using simple Taylor Rule approximation
+        Rough estimate: ~2.5% historically, adjust for current inflation expectations
+        """
+        # Simplified: neutral real rate (~0.5%) + inflation target (2%)
+        return 2.5
+    
     def fetch_all_data(self):
         """
         Fetch all macro indicators
@@ -106,10 +238,19 @@ class MacroDataFetcher:
         Returns:
             Dictionary with all current macro data
         """
+        fed_funds = self.fetch_fed_funds_rate()
+        neutral = self.estimate_neutral_rate()
+        
         return {
             'gdp_growth': self.fetch_gdp_growth(),
             'inflation': self.fetch_inflation_yoy(),
             'real_rate': self.fetch_real_treasury_rate(),
+            'unemployment': self.fetch_unemployment_rate(),
+            'ism_pmi': self.fetch_ism_pmi(),
+            'yield_spread': self.fetch_yield_spread_2_10(),
+            'fed_funds': fed_funds,
+            'neutral_rate': neutral,
+            'fed_stance': fed_funds - neutral if fed_funds else None,
             'timestamp': datetime.now().isoformat()
         }
 

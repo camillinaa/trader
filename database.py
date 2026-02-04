@@ -1,4 +1,6 @@
 from supabase import create_client, Client
+from dotenv import load_dotenv
+
 import os
 from datetime import datetime
 
@@ -7,6 +9,7 @@ class Database:
     
     def __init__(self):
         # Get Supabase credentials from environment variables
+        load_dotenv()
         supabase_url = os.getenv('SUPABASE_URL', '')
         supabase_key = os.getenv('SUPABASE_KEY', '')
         

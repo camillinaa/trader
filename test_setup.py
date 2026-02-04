@@ -28,6 +28,10 @@ for var in required_vars:
         print(f"   ✗ {var}: Missing or not configured")
         missing_vars.append(var)
 
+import os
+print("SUPABASE_URL:", repr(os.getenv('SUPABASE_URL')))
+print("SUPABASE_KEY starts with:", os.getenv('SUPABASE_KEY')[:20] if os.getenv('SUPABASE_KEY') else "MISSING")
+
 if missing_vars:
     print(f"\n   ⚠️  Please set these variables in your .env file: {', '.join(missing_vars)}")
     print("   Copy .env.example to .env and fill in your credentials")
@@ -116,7 +120,7 @@ print("=" * 60)
 print()
 print("Next steps:")
 print("1. If all tests passed, run: python app.py")
-print("2. Open http://localhost:5000 in your browser")
+print("2. Open http://localhost:8000 in your browser")
 print("3. Subscribe to ntfy topic on your phone:")
 print(f"   https://ntfy.sh/{os.getenv('NTFY_TOPIC', 'your-topic')}")
 print()

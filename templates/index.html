@@ -3,240 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Macro Tracker Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <title>Macroeconomic Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        graphite: {
+                            50: '#f6f7f8',
+                            100: '#e1e4e8',
+                            200: '#c6ccd3',
+                            300: '#a0a9b4',
+                            400: '#7a8593',
+                            500: '#5f6d7d',
+                            600: '#4a5564',
+                            700: '#3d4651',
+                            800: '#2f3742',
+                            900: '#1a1f29',
+                            950: '#0f1419',
+                        }
+                    }
+                }
+            }
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-        
-        .fred-disclaimer {
-            font-size: 0.85em;
-            opacity: 1;
-            margin-bottom: 8px;
-        }
-        
-        .dashboard {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .metric-card h3 {
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.9;
-            margin-bottom: 10px;
-        }
-        
-        .metric-card .value {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .metric-card .label {
-            font-size: 0.85em;
-            opacity: 0.8;
-        }
-        
-        .signal-box {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .signal-box h2 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        
-        .signal {
-            font-size: 2em;
-            font-weight: bold;
-            padding: 15px 30px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-        
-        .signal.buy {
-            background: #10b981;
-            color: white;
-        }
-        
-        .signal.sell {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .signal.hold {
-            background: #f59e0b;
-            color: white;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-        
-        button:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-            color: #667eea;
-        }
-        
-        .timestamp {
-            text-align: center;
-            color: #6b7280;
-            margin-top: 20px;
-            font-size: 0.9em;
-        }
-        
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-    </style>
+    </script>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Macro Tracker</h1>
-            <p class="fred-disclaimer">This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.</p>
-            <p>Real-time economic indicators for trading decisions</p>
+<body class="bg-gradient-to-br from-graphite-900 via-graphite-800 to-graphite-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-graphite-50 mb-3">
+                📊 Macroeconomic Monitor
+            </h1>
+            <p class="text-graphite-300 text-lg">
+                Real-time tracking of GDP growth, inflation dynamics, and real interest rates
+            </p>
         </div>
-        
-        <div class="dashboard">
-            <div class="error" id="error"></div>
+
+        <!-- Main Dashboard Card -->
+        <div class="bg-graphite-800 rounded-2xl shadow-2xl p-8 border border-graphite-700">
             
-            <div class="signal-box">
-                <h2>Current Signal</h2>
-                <div class="signal hold" id="signal">Loading...</div>
+            <!-- Error Alert -->
+            <div id="error" class="hidden bg-red-900/30 border border-red-700 text-red-200 px-6 py-4 rounded-lg mb-6">
+                <span id="error-text"></span>
             </div>
-            
-            <div class="metrics">
-                <div class="metric-card">
-                    <h3>GDP Growth</h3>
-                    <div class="value" id="gdp-value">--</div>
-                    <div class="label">Year-over-Year %</div>
-                </div>
-                
-                <div class="metric-card">
-                    <h3>Inflation (CPI)</h3>
-                    <div class="value" id="inflation-value">--</div>
-                    <div class="label">Year-over-Year %</div>
-                </div>
-                
-                <div class="metric-card">
-                    <h3>Real Rate (10Y TIPS)</h3>
-                    <div class="value" id="rate-value">--</div>
-                    <div class="label">Current Yield %</div>
+
+            <!-- Signal Box -->
+            <div class="bg-graphite-700/50 rounded-xl p-8 mb-8 text-center border border-graphite-600">
+                <h2 class="text-xl font-semibold text-graphite-200 mb-4">Current Economic Signal</h2>
+                <div id="signal" class="inline-block px-8 py-4 rounded-lg text-2xl font-bold bg-amber-500 text-white">
+                    Loading...
                 </div>
             </div>
-            
-            <div class="controls">
-                <button onclick="refreshData()">🔄 Refresh Data</button>
-                <button onclick="sendTestNotification()">📱 Test Notification</button>
+
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- GDP Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        GDP Growth
+                    </h3>
+                    <div id="gdp-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        Year-over-Year %
+                    </div>
+                    <div class="h-16"><canvas id="chart-gdp"></canvas></div>
+                </div>
+
+                <!-- Inflation Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        Inflation (CPI)
+                    </h3>
+                    <div id="inflation-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        Year-over-Year %
+                    </div>
+                    <div class="h-16"><canvas id="chart-inflation"></canvas></div>
+                </div>
+
+                <!-- Unemployment Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        Unemployment
+                    </h3>
+                    <div id="unemployment-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        Current Rate %
+                    </div>
+                    <div class="h-16"><canvas id="chart-unemployment"></canvas></div>
+                </div>
+
+                <!-- ISM PMI Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        ISM Mfg PMI
+                    </h3>
+                    <div id="ism-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        Index (50+ = expansion)
+                    </div>
+                    <div class="h-16"><canvas id="chart-ism"></canvas></div>
+                </div>
+
+                <!-- Real Rate Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        Real Rate (10Y TIPS)
+                    </h3>
+                    <div id="rate-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        Current Yield %
+                    </div>
+                    <div class="h-16"><canvas id="chart-rate"></canvas></div>
+                </div>
+
+                <!-- Yield Spread Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        2Y-10Y Spread
+                    </h3>
+                    <div id="spread-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        Basis Points
+                    </div>
+                    <div class="h-16"><canvas id="chart-spread"></canvas></div>
+                </div>
+
+                <!-- Fed Funds Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        Fed Funds Rate
+                    </h3>
+                    <div id="fed-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        Current Rate %
+                    </div>
+                    <div class="h-16"><canvas id="chart-fed"></canvas></div>
+                </div>
+
+                <!-- Fed Stance Card -->
+                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
+                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
+                        Fed Stance
+                    </h3>
+                    <div id="stance-value" class="text-4xl font-bold text-graphite-50 mb-2">
+                        --
+                    </div>
+                    <div class="text-sm text-graphite-400 mb-3">
+                        vs Neutral (%)
+                    </div>
+                    <div class="h-16"><canvas id="chart-stance"></canvas></div>
+                </div>
             </div>
-            
-            <div class="loading" id="loading">
-                <p>⏳ Loading data...</p>
+
+            <!-- AI Summary Section -->
+            <div class="bg-graphite-700/50 rounded-xl p-8 mb-8 border border-graphite-600">
+                <h2 class="text-xl font-semibold text-graphite-200 mb-4 flex items-center">
+                    <span class="mr-2">🤖</span> AI Trading Analysis
+                </h2>
+                <div id="ai-summary" class="text-graphite-300 leading-relaxed">
+                    Click "Refresh Data" to generate AI analysis...
+                </div>
             </div>
-            
-            <div class="timestamp" id="timestamp"></div>
+
+            <!-- Controls -->
+            <div class="flex flex-wrap justify-center gap-4 mb-6">
+                <button onclick="refreshData()" 
+                    class="bg-graphite-600 hover:bg-graphite-500 text-white font-semibold px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                    🔄 Refresh Data
+                </button>
+                <button onclick="sendTestNotification()" 
+                    class="bg-graphite-600 hover:bg-graphite-500 text-white font-semibold px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                    📱 Test Notification
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="hidden text-center py-4">
+                <p class="text-graphite-300">⏳ Loading data...</p>
+            </div>
+
+            <!-- Timestamp -->
+            <div id="timestamp" class="text-center text-graphite-400 text-sm mt-6"></div>
         </div>
     </div>
-    
+
     <script>
-        // Load data on page load
-        window.addEventListener('DOMContentLoaded', loadCurrentData);
+        const sparklineCharts = {};
+        const CHART_OPTIONS = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 400 },
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: {
+                    display: false,
+                    grace: '10%'
+                }
+            },
+            elements: {
+                line: { borderWidth: 1.5, tension: 0.3 },
+                point: { radius: 0 }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => { loadCurrentData(); loadHistory(); });
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const data = await response.json();
+                if (data && !data.error) updateSparklines(data);
+            } catch (error) {
+                console.warn('History load failed:', error.message);
+            }
+        }
+
+        function updateSparklines(history) {
+            const metrics = [
+                { key: 'gdp_growth', canvasId: 'chart-gdp' },
+                { key: 'inflation', canvasId: 'chart-inflation' },
+                { key: 'unemployment', canvasId: 'chart-unemployment' },
+                { key: 'ism_pmi', canvasId: 'chart-ism' },
+                { key: 'real_rate', canvasId: 'chart-rate' },
+                { key: 'yield_spread', canvasId: 'chart-spread' },
+                { key: 'fed_funds', canvasId: 'chart-fed' },
+                { key: 'fed_stance', canvasId: 'chart-stance' }
+            ];
+            const lineColor = 'rgba(251, 191, 36, 0.9)';
+            const fillColor = 'rgba(251, 191, 36, 0.15)';
+            metrics.forEach(({ key, canvasId }) => {
+                const arr = history[key] || [];
+                if (sparklineCharts[canvasId]) {
+                    sparklineCharts[canvasId].destroy();
+                    sparklineCharts[canvasId] = null;
+                }
+                const ctx = document.getElementById(canvasId);
+                if (!ctx || arr.length === 0) return;
+                sparklineCharts[canvasId] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: arr.map(d => d.date),
+                        datasets: [{
+                            data: arr.map(d => d.value),
+                            borderColor: lineColor,
+                            backgroundColor: fillColor,
+                            fill: true
+                        }]
+                    },
+                    options: CHART_OPTIONS
+                });
+            });
+        }
         
         async function loadCurrentData() {
             try {
                 const response = await fetch('/api/current-data');
                 const data = await response.json();
-                
-                if (data) {
-                    updateDisplay(data);
-                }
+                if (data) updateDisplay(data);
             } catch (error) {
                 showError('Failed to load data: ' + error.message);
             }
@@ -246,8 +292,8 @@
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
             
-            loading.style.display = 'block';
-            error.style.display = 'none';
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
             
             try {
                 const response = await fetch('/api/update-data');
@@ -255,16 +301,15 @@
                 
                 if (result.success) {
                     updateDisplay(result.data);
-                    if (result.signal) {
-                        updateSignal(result.signal);
-                    }
+                    if (result.signal) updateSignal(result.signal);
+                    loadHistory();
                 } else {
                     showError(result.error || 'Failed to update data');
                 }
             } catch (error) {
                 showError('Failed to refresh data: ' + error.message);
             } finally {
-                loading.style.display = 'none';
+                loading.classList.add('hidden');
             }
         }
         
@@ -278,6 +323,25 @@
             document.getElementById('rate-value').textContent = 
                 data.real_rate ? data.real_rate.toFixed(2) + '%' : 'N/A';
             
+            document.getElementById('unemployment-value').textContent = 
+                data.unemployment ? data.unemployment.toFixed(1) + '%' : 'N/A';
+            
+            document.getElementById('ism-value').textContent = 
+                data.ism_pmi ? data.ism_pmi.toFixed(1) : 'N/A';
+            
+            document.getElementById('spread-value').textContent = 
+                data.yield_spread ? (data.yield_spread * 100).toFixed(0) + ' bps' : 'N/A';
+            
+            document.getElementById('fed-value').textContent = 
+                data.fed_funds ? data.fed_funds.toFixed(2) + '%' : 'N/A';
+            
+            document.getElementById('stance-value').textContent = 
+                data.fed_stance ? data.fed_stance.toFixed(2) + '%' : 'N/A';
+            
+            if (data.ai_summary) {
+                document.getElementById('ai-summary').textContent = data.ai_summary;
+            }
+            
             if (data.created_at) {
                 const date = new Date(data.created_at);
                 document.getElementById('timestamp').textContent = 
@@ -288,13 +352,22 @@
         function updateSignal(signal) {
             const signalEl = document.getElementById('signal');
             signalEl.textContent = signal.action;
-            signalEl.className = 'signal ' + signal.action.toLowerCase();
+            
+            const colors = {
+                'BUY': 'bg-emerald-500 text-white',
+                'SELL': 'bg-red-500 text-white',
+                'HOLD': 'bg-amber-500 text-white'
+            };
+            
+            signalEl.className = 'inline-block px-8 py-4 rounded-lg text-2xl font-bold ' + 
+                (colors[signal.action] || 'bg-amber-500 text-white');
         }
         
         function showError(message) {
             const error = document.getElementById('error');
-            error.textContent = message;
-            error.style.display = 'block';
+            const errorText = document.getElementById('error-text');
+            errorText.textContent = message;
+            error.classList.remove('hidden');
         }
         
         async function sendTestNotification() {

@@ -4,6 +4,7 @@ import os
 from data_fetcher import MacroDataFetcher
 from database import Database
 from notifier import Notifier
+from gemini_analyzer import GeminiAnalyzer
 
 app = Flask(__name__)
 
@@ -11,6 +12,7 @@ app = Flask(__name__)
 db = Database()
 fetcher = MacroDataFetcher()
 notifier = Notifier()
+analyzer = GeminiAnalyzer()
 
 @app.route('/')
 def index():
@@ -23,6 +25,16 @@ def get_current_data():
     data = db.get_latest_data()
     return jsonify(data)
 
+@app.route('/api/history')
+def get_history():
+    """API endpoint to get 365-day history for all 8 macro series (for sparklines)."""
+    days = 365
+    try:
+        history = fetcher.fetch_all_historical(days=days)
+        return jsonify(history)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/update-data')
 def update_data():
     """Manually trigger data update"""
@@ -30,24 +42,28 @@ def update_data():
         # Fetch latest data
         macro_data = fetcher.fetch_all_data()
         
+        # Generate AI summary
+        ai_summary = analyzer.generate_trading_summary(macro_data)
+        macro_data['ai_summary'] = ai_summary
+        
         # Save to database
         db.save_data(macro_data)
         
         # Check if notification should be sent
-        # (You'll define your rules here later)
         signal = calculate_signal(macro_data)
         if signal:
             notifier.send_notification(
                 f"Trading Signal: {signal['action']}",
-                f"Growth: {macro_data['gdp_growth']:.2f}%, "
+                f"GDP: {macro_data['gdp_growth']:.2f}%, "
                 f"Inflation: {macro_data['inflation']:.2f}%, "
-                f"Real Rate: {macro_data['real_rate']:.2f}%"
+                f"Unemployment: {macro_data['unemployment']:.2f}%"
             )
         
         return jsonify({
             'success': True,
             'data': macro_data,
-            'signal': signal
+            'signal': signal,
+            'ai_summary': ai_summary
         })
     except Exception as e:
         return jsonify({

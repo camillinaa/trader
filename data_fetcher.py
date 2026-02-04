@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime, timedelta
 import os
+import time
 
 class MacroDataFetcher:
     """Fetches macro economic data from FRED and US Treasury APIs"""
@@ -41,9 +42,10 @@ class MacroDataFetcher:
             }
         return None
 
-    def fetch_fred_series_history(self, series_id, days=365):
+    def fetch_fred_series_history(self, series_id, days=365, limit=500):
         """
         Fetch time series from FRED for the last N days.
+        Uses desc + limit then filters to date range (works for all frequencies).
         Returns list of {date, value} sorted ascending by date (oldest first).
         Skips observations with missing (.) values.
         """
@@ -55,9 +57,8 @@ class MacroDataFetcher:
             'series_id': series_id,
             'api_key': self.fred_api_key,
             'file_type': 'json',
-            'sort_order': 'asc',
-            'observation_start': start.strftime('%Y-%m-%d'),
-            'observation_end': end.strftime('%Y-%m-%d'),
+            'sort_order': 'desc',
+            'limit': limit,
         }
         try:
             response = requests.get(self.fred_base_url, params=params)
@@ -68,32 +69,40 @@ class MacroDataFetcher:
                 v = obs.get('value')
                 if v is None or v == '.':
                     continue
+                dt_str = obs.get('date')
+                if not dt_str:
+                    continue
+                if dt_str < start.strftime('%Y-%m-%d') or dt_str > end.strftime('%Y-%m-%d'):
+                    continue
                 try:
-                    out.append({'date': obs['date'], 'value': float(v)})
+                    out.append({'date': dt_str, 'value': float(v)})
                 except (ValueError, TypeError):
                     continue
+            out.sort(key=lambda x: x['date'])
             return out
         except Exception:
             return []
 
     def fetch_inflation_yoy_history(self, days=365):
-        """Fetch CPI and return YoY % change for each month in range (last 12 months of YoY)."""
+        """Fetch CPI and return YoY % change for each month (last 24 months of YoY)."""
         if not self.fred_api_key:
             return []
-        # Need 13+ months of CPI to compute 12 months of YoY
+        # Get last 36 months of CPI (desc), then compute YoY for each month that has 12m prior
         params = {
             'series_id': 'CPIAUCSL',
             'api_key': self.fred_api_key,
             'file_type': 'json',
-            'sort_order': 'asc',
-            'observation_start': (datetime.now() - timedelta(days=days + 400)).strftime('%Y-%m-%d'),
-            'observation_end': datetime.now().strftime('%Y-%m-%d'),
+            'sort_order': 'desc',
+            'limit': 36,
         }
         try:
             response = requests.get(self.fred_base_url, params=params)
             response.raise_for_status()
             data = response.json()
-            observations = data.get('observations', [])
+            observations = list(data.get('observations', []))
+            # observations are newest first; reverse so oldest first for indexing
+            observations = [o for o in observations if o.get('value') and o.get('value') != '.']
+            observations.sort(key=lambda o: o['date'])
             out = []
             for i in range(12, len(observations)):
                 cur = observations[i].get('value')
@@ -104,7 +113,10 @@ class MacroDataFetcher:
                         out.append({'date': observations[i]['date'], 'value': yoy})
                     except (ValueError, TypeError):
                         continue
-            return out[-24:] if len(out) > 24 else out  # cap to ~2 years
+            # Keep only last 24 months within the requested window
+            cutoff = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+            out = [x for x in out if x['date'] >= cutoff]
+            return out[-24:] if len(out) > 24 else out
         except Exception:
             return []
 
@@ -113,14 +125,20 @@ class MacroDataFetcher:
         Fetch last 365 days of history for all 8 dashboard series.
         Returns dict: metric_key -> list of {date, value} (ascending by date).
         """
+        def _fetch(series_id, **kwargs):
+            out = self.fetch_fred_series_history(series_id, days=days, **kwargs)
+            time.sleep(0.15)  # avoid FRED rate limiting
+            return out
+
         neutral = self.estimate_neutral_rate()
-        gdp = self.fetch_fred_series_history('A191RL1Q225SBEA', days)
+        gdp = _fetch('A191RL1Q225SBEA')
         inflation = self.fetch_inflation_yoy_history(days)
-        unemployment = self.fetch_fred_series_history('UNRATE', days)
-        ism_pmi = self.fetch_fred_series_history('MANEMP', days)
-        real_rate = self.fetch_fred_series_history('DFII10', days)
-        yield_spread = self.fetch_fred_series_history('T10Y2Y', days)
-        fed_funds = self.fetch_fred_series_history('FEDFUNDS', days)
+        time.sleep(0.15)
+        unemployment = _fetch('UNRATE')
+        ism_pmi = _fetch('MANEMP')
+        real_rate = _fetch('DFII10')
+        yield_spread = _fetch('T10Y2Y')
+        fed_funds = _fetch('FEDFUNDS')
         fed_stance = [{'date': x['date'], 'value': x['value'] - neutral} for x in fed_funds]
         return {
             'gdp_growth': gdp,

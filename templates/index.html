@@ -72,9 +72,10 @@
                     <div id="gdp-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         Year-over-Year %
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Quarterly</div>
                     <div class="h-16"><canvas id="chart-gdp"></canvas></div>
                 </div>
 
@@ -86,9 +87,10 @@
                     <div id="inflation-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         Year-over-Year %
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
                     <div class="h-16"><canvas id="chart-inflation"></canvas></div>
                 </div>
 
@@ -100,9 +102,10 @@
                     <div id="unemployment-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         Current Rate %
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
                     <div class="h-16"><canvas id="chart-unemployment"></canvas></div>
                 </div>
 
@@ -114,9 +117,10 @@
                     <div id="ism-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         Index (50+ = expansion)
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
                     <div class="h-16"><canvas id="chart-ism"></canvas></div>
                 </div>
 
@@ -128,9 +132,10 @@
                     <div id="rate-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         Current Yield %
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Daily</div>
                     <div class="h-16"><canvas id="chart-rate"></canvas></div>
                 </div>
 
@@ -142,9 +147,10 @@
                     <div id="spread-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         Basis Points
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Daily</div>
                     <div class="h-16"><canvas id="chart-spread"></canvas></div>
                 </div>
 
@@ -156,9 +162,10 @@
                     <div id="fed-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         Current Rate %
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
                     <div class="h-16"><canvas id="chart-fed"></canvas></div>
                 </div>
 
@@ -170,9 +177,10 @@
                     <div id="stance-value" class="text-4xl font-bold text-graphite-50 mb-2">
                         --
                     </div>
-                    <div class="text-sm text-graphite-400 mb-3">
+                    <div class="text-sm text-graphite-400 mb-1">
                         vs Neutral (%)
                     </div>
+                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
                     <div class="h-16"><canvas id="chart-stance"></canvas></div>
                 </div>
             </div>
@@ -182,9 +190,13 @@
                 <h2 class="text-xl font-semibold text-graphite-200 mb-4 flex items-center">
                     <span class="mr-2">🤖</span> AI Trading Analysis
                 </h2>
-                <div id="ai-summary" class="text-graphite-300 leading-relaxed">
-                    Click "Refresh Data" to generate AI analysis...
+                <div id="ai-summary" class="text-graphite-300 leading-relaxed mb-4">
+                    Click "Generate AI Overview" to run analysis on current data.
                 </div>
+                <button onclick="generateAISummary()" id="btn-ai-summary"
+                    class="bg-graphite-600 hover:bg-graphite-500 text-white font-semibold px-5 py-2 rounded-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm">
+                    🤖 Generate AI Overview
+                </button>
             </div>
 
             <!-- Controls -->
@@ -312,6 +324,29 @@
                 loading.classList.add('hidden');
             }
         }
+
+        async function generateAISummary() {
+            const el = document.getElementById('ai-summary');
+            const btn = document.getElementById('btn-ai-summary');
+            const origText = btn.textContent;
+            el.textContent = '⏳ Generating AI overview...';
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            try {
+                const response = await fetch('/api/generate-ai-summary');
+                const result = await response.json();
+                if (result.success) {
+                    el.textContent = result.ai_summary || 'No summary returned.';
+                } else {
+                    el.textContent = 'Error: ' + (result.error || 'Failed to generate overview.');
+                }
+            } catch (error) {
+                el.textContent = 'Error: ' + error.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = origText;
+            }
+        }
         
         function updateDisplay(data) {
             document.getElementById('gdp-value').textContent = 
@@ -338,10 +373,10 @@
             document.getElementById('stance-value').textContent = 
                 data.fed_stance ? data.fed_stance.toFixed(2) + '%' : 'N/A';
             
-            if (data.ai_summary) {
+            if (data && data.ai_summary) {
                 document.getElementById('ai-summary').textContent = data.ai_summary;
             }
-            
+
             if (data.created_at) {
                 const date = new Date(data.created_at);
                 document.getElementById('timestamp').textContent = 

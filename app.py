@@ -37,19 +37,11 @@ def get_history():
 
 @app.route('/api/update-data')
 def update_data():
-    """Manually trigger data update"""
+    """Manually trigger macro data refresh (boxes + charts). Does not run AI."""
     try:
-        # Fetch latest data
         macro_data = fetcher.fetch_all_data()
-        
-        # Generate AI summary
-        ai_summary = analyzer.generate_trading_summary(macro_data)
-        macro_data['ai_summary'] = ai_summary
-        
-        # Save to database
         db.save_data(macro_data)
-        
-        # Check if notification should be sent
+
         signal = calculate_signal(macro_data)
         if signal:
             notifier.send_notification(
@@ -58,18 +50,28 @@ def update_data():
                 f"Inflation: {macro_data['inflation']:.2f}%, "
                 f"Unemployment: {macro_data['unemployment']:.2f}%"
             )
-        
+
         return jsonify({
             'success': True,
             'data': macro_data,
             'signal': signal,
-            'ai_summary': ai_summary
         })
     except Exception as e:
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
+
+@app.route('/api/generate-ai-summary')
+def generate_ai_summary():
+    """Generate AI trading overview from current macro data (on-demand only)."""
+    try:
+        macro_data = fetcher.fetch_all_data()
+        ai_summary = analyzer.generate_trading_summary(macro_data)
+        return jsonify({'success': True, 'ai_summary': ai_summary})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 def calculate_signal(data):
     """

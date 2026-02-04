@@ -1,0 +1,12 @@
+name: trader
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - flask=3.0.0
+  - requests=2.31.0
+  - python-dotenv=1.0.0
+  - pip
+  - pip:
+    - supabase==2.3.0

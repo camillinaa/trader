@@ -1,8 +1,7 @@
 # Macro Tracker - Personal Trading Signal App
 
 A free, self-hosted web app that tracks key macroeconomic indicators (GDP growth, inflation, real interest rates) and sends you push notifications when trading conditions meet your criteria.
-
-**🐍 Built with Python + Conda for easy environment management**
+This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.
 
 ## Features
 
@@ -266,16 +265,15 @@ conda list
 
 ## Next Steps
 
-1. **Refine your trading rules** based on your strategy
+1. **Refine your trading rules** based on strategy
 2. **Add more indicators** (unemployment, yield curve, etc.)
-3. **Backtest your strategy** using historical data
+3. **Backtest strategy** using historical data
 4. **Set up automated scheduling** for daily checks
 5. **Add charting** to visualize trends over time
 
 ## Important Notes
 
 ⚠️ **This is for personal use only** - not financial advice
-⚠️ **Revolut has no API** - you'll need to manually execute trades
 ⚠️ **Test thoroughly** before relying on signals
 ⚠️ **Data lags** - macro data updates monthly/quarterly
 

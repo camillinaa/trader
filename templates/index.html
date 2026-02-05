@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Macroeconomic Monitor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Macro Dashboard — Live Insights</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
@@ -12,213 +14,206 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        'sans': ['Nunito', 'sans-serif'],
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        graphite: {
-                            50: '#f6f7f8',
-                            100: '#e1e4e8',
-                            200: '#c6ccd3',
-                            300: '#a0a9b4',
-                            400: '#7a8593',
-                            500: '#5f6d7d',
-                            600: '#4a5564',
-                            700: '#3d4651',
-                            800: '#2f3742',
-                            900: '#1a1f29',
-                            950: '#0f1419',
+                        surface: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        accent: {
+                            cyan: '#22d3ee',
+                            emerald: '#34d399',
+                            amber: '#fbbf24',
+                            rose: '#fb7185',
                         }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                    },
+                    backdropBlur: {
+                        xs: '2px',
                     }
                 }
             }
         }
     </script>
+    <style>
+        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(148, 163, 184, 0.08); }
+        .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.06); }
+        .gradient-text { background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .signal-badge { box-shadow: 0 0 24px rgba(34, 211, 238, 0.2); }
+        .metric-card:hover { transform: translateY(-2px); border-color: rgba(34, 211, 238, 0.15); }
+        .btn-primary { transition: all 0.2s ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(34, 211, 238, 0.2); }
+        .chart-container { min-height: 56px; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-graphite-900 via-graphite-800 to-graphite-900 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
+<body class="min-h-screen bg-surface-950 font-sans text-surface-200 antialiased">
+    <!-- Subtle background gradient -->
+    <div class="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,211,238,0.08),transparent)] pointer-events-none"></div>
+    <div class="fixed inset-0 bg-[radial-gradient(ellipse_60%_40%_at_100%_100%,rgba(52,211,153,0.04),transparent)] pointer-events-none"></div>
+
+    <div class="relative container mx-auto px-4 sm:px-6 lg:px-8 py-10 max-w-7xl">
         <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold text-graphite-50 mb-3">
-                📊 Macroeconomic Monitor
-            </h1>
-            <p class="text-graphite-300 text-lg">
-                Real-time tracking of GDP growth, inflation dynamics, and real interest rates
-            </p>
+        <header class="mb-14 animate-fade-in">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+                <div>
+                    <p class="text-accent-cyan/80 text-sm font-medium tracking-wider uppercase mb-2">Macro Monitor</p>
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
+                        <span class="gradient-text">Economic Intelligence</span>
+                    </h1>
+                    <p class="mt-3 text-surface-400 text-base max-w-xl">
+                        Real-time GDP, inflation, and rate dynamics — powered by FRED
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-surface-500 text-xs font-mono hidden sm:inline">Live data</span>
+                    <span class="w-2 h-2 rounded-full bg-accent-emerald animate-pulse"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Error Alert -->
+        <div id="error" class="hidden glass rounded-xl px-6 py-4 mb-6 border-rose-500/30 bg-rose-500/10 text-rose-300 animate-slide-up">
+            <span id="error-text"></span>
         </div>
 
-        <!-- Main Dashboard Card -->
-        <div class="bg-graphite-800 rounded-2xl shadow-2xl p-8 border border-graphite-700">
-            
-            <!-- Error Alert -->
-            <div id="error" class="hidden bg-red-900/30 border border-red-700 text-red-200 px-6 py-4 rounded-lg mb-6">
-                <span id="error-text"></span>
+        <!-- Signal Hero -->
+        <section class="glass rounded-2xl p-8 sm:p-10 mb-8 animate-slide-up">
+            <p class="text-surface-400 text-sm font-medium mb-4">Current signal</p>
+            <div id="signal" class="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-xl font-semibold bg-surface-800/80 border border-surface-700/50 text-surface-300">
+                <span class="w-2 h-2 rounded-full bg-surface-500 animate-pulse"></span>
+                Loading...
             </div>
+        </section>
 
-            <!-- Signal Box -->
-            <div class="bg-graphite-700/50 rounded-xl p-8 mb-8 text-center border border-graphite-600">
-                <h2 class="text-xl font-semibold text-graphite-200 mb-4">Current Economic Signal</h2>
-                <div id="signal" class="inline-block px-8 py-4 rounded-lg text-2xl font-bold bg-amber-500 text-white">
-                    Loading...
-                </div>
+        <!-- Macro Regime Score -->
+        <section class="glass rounded-2xl p-6 sm:p-8 mb-8 animate-slide-up">
+            <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">Macro regime score</p>
+            <div class="flex items-baseline gap-3">
+                <span id="regime-score-value" class="text-4xl sm:text-5xl font-semibold text-surface-50 font-mono">—</span>
+                <span class="text-surface-500 text-sm">/ 100</span>
             </div>
+            <p class="text-surface-500 text-sm mt-2">Weighted composite of growth, inflation, employment, manufacturing, yield curve & fed stance</p>
+        </section>
 
-            <!-- Metrics Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- GDP Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        GDP Growth
-                    </h3>
-                    <div id="gdp-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        Year-over-Year %
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Quarterly</div>
-                    <div class="h-16"><canvas id="chart-gdp"></canvas></div>
-                </div>
-
-                <!-- Inflation Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        Inflation (CPI)
-                    </h3>
-                    <div id="inflation-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        Year-over-Year %
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
-                    <div class="h-16"><canvas id="chart-inflation"></canvas></div>
-                </div>
-
-                <!-- Unemployment Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        Unemployment
-                    </h3>
-                    <div id="unemployment-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        Current Rate %
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
-                    <div class="h-16"><canvas id="chart-unemployment"></canvas></div>
-                </div>
-
-                <!-- ISM PMI Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        ISM Mfg PMI
-                    </h3>
-                    <div id="ism-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        Index (50+ = expansion)
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
-                    <div class="h-16"><canvas id="chart-ism"></canvas></div>
-                </div>
-
-                <!-- Real Rate Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        Real Rate (10Y TIPS)
-                    </h3>
-                    <div id="rate-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        Current Yield %
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Daily</div>
-                    <div class="h-16"><canvas id="chart-rate"></canvas></div>
-                </div>
-
-                <!-- Yield Spread Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        2Y-10Y Spread
-                    </h3>
-                    <div id="spread-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        Basis Points
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Daily</div>
-                    <div class="h-16"><canvas id="chart-spread"></canvas></div>
-                </div>
-
-                <!-- Fed Funds Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        Fed Funds Rate
-                    </h3>
-                    <div id="fed-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        Current Rate %
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
-                    <div class="h-16"><canvas id="chart-fed"></canvas></div>
-                </div>
-
-                <!-- Fed Stance Card -->
-                <div class="bg-gradient-to-br from-graphite-700 to-graphite-800 rounded-xl p-6 border border-graphite-600 hover:border-graphite-500 transition-all">
-                    <h3 class="text-sm font-semibold text-graphite-300 uppercase tracking-wider mb-3">
-                        Fed Stance
-                    </h3>
-                    <div id="stance-value" class="text-4xl font-bold text-graphite-50 mb-2">
-                        --
-                    </div>
-                    <div class="text-sm text-graphite-400 mb-1">
-                        vs Neutral (%)
-                    </div>
-                    <div class="text-xs text-graphite-500 mb-3">FRED: Monthly</div>
-                    <div class="h-16"><canvas id="chart-stance"></canvas></div>
-                </div>
+        <!-- Metrics Grid -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="gdp_growth">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">GDP Growth</p>
+                <p id="gdp-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">YoY % · FRED Quarterly</p>
+                <div class="chart-container"><canvas id="chart-gdp"></canvas></div>
             </div>
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="inflation">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">Inflation (CPI)</p>
+                <p id="inflation-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">YoY % · FRED Monthly</p>
+                <div class="chart-container"><canvas id="chart-inflation"></canvas></div>
+            </div>
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="unemployment">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">Unemployment</p>
+                <p id="unemployment-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">Rate % · FRED Monthly</p>
+                <div class="chart-container"><canvas id="chart-unemployment"></canvas></div>
+            </div>
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="manufacturing_index">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">Manufacturing Index</p>
+                <p id="manufacturing-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">Positive = expansion · FRED Monthly</p>
+                <div class="chart-container"><canvas id="chart-manufacturing"></canvas></div>
+            </div>
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="real_rate">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">Real Rate (10Y TIPS)</p>
+                <p id="rate-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">Yield % · FRED Daily</p>
+                <div class="chart-container"><canvas id="chart-rate"></canvas></div>
+            </div>
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="yield_spread">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">2Y–10Y Spread</p>
+                <p id="spread-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">Basis points · FRED Daily</p>
+                <div class="chart-container"><canvas id="chart-spread"></canvas></div>
+            </div>
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="fed_funds">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">Fed Funds Rate</p>
+                <p id="fed-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">Rate % · FRED Monthly</p>
+                <div class="chart-container"><canvas id="chart-fed"></canvas></div>
+            </div>
+            <div class="glass-card rounded-xl p-5 metric-card transition-all duration-300 border border-transparent" data-metric="fed_stance">
+                <p class="text-surface-500 text-xs font-medium uppercase tracking-wider mb-2">Fed Stance</p>
+                <p id="stance-value" class="text-2xl sm:text-3xl font-semibold text-surface-50 font-mono mb-1">—</p>
+                <p class="text-surface-500 text-xs mb-3">vs neutral % · FRED Monthly</p>
+                <div class="chart-container"><canvas id="chart-stance"></canvas></div>
+            </div>
+        </section>
 
-            <!-- AI Summary Section -->
-            <div class="bg-graphite-700/50 rounded-xl p-8 mb-8 border border-graphite-600">
-                <h2 class="text-xl font-semibold text-graphite-200 mb-4 flex items-center">
-                    <span class="mr-2">🤖</span> AI Trading Analysis
-                </h2>
-                <div id="ai-summary" class="text-graphite-300 leading-relaxed mb-4">
-                    Click "Generate AI Overview" to run analysis on current data.
+        <!-- AI Summary -->
+        <section class="glass rounded-2xl p-8 sm:p-10 mb-8 animate-slide-up">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-accent-cyan/10 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-surface-100">AI Trading Analysis</h2>
+                        <p class="text-surface-500 text-sm">Powered by Gemini</p>
+                    </div>
                 </div>
                 <button onclick="generateAISummary()" id="btn-ai-summary"
-                    class="bg-graphite-600 hover:bg-graphite-500 text-white font-semibold px-5 py-2 rounded-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm">
-                    🤖 Generate AI Overview
+                    class="btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-accent-cyan/15 hover:bg-accent-cyan/25 text-accent-cyan font-medium text-sm border border-accent-cyan/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Generate overview
                 </button>
             </div>
-
-            <!-- Controls -->
-            <div class="flex flex-wrap justify-center gap-4 mb-6">
-                <button onclick="refreshData()" 
-                    class="bg-graphite-600 hover:bg-graphite-500 text-white font-semibold px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                    🔄 Refresh Data
-                </button>
-                <button onclick="sendTestNotification()" 
-                    class="bg-graphite-600 hover:bg-graphite-500 text-white font-semibold px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                    📱 Test Notification
-                </button>
+            <div id="ai-summary" class="text-surface-400 leading-relaxed text-[15px]">
+                Click <span class="text-accent-cyan/90">Generate overview</span> to run AI analysis on current macro data.
             </div>
+        </section>
 
-            <!-- Loading Indicator -->
-            <div id="loading" class="hidden text-center py-4">
-                <p class="text-graphite-300">⏳ Loading data...</p>
-            </div>
-
-            <!-- Timestamp -->
-            <div id="timestamp" class="text-center text-graphite-400 text-sm mt-6"></div>
+        <!-- Actions -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+            <button onclick="refreshData()"
+                class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-surface-800/80 hover:bg-surface-700/80 text-surface-200 font-medium border border-surface-700/50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Refresh data
+            </button>
+            <button onclick="sendTestNotification()"
+                class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-surface-800/50 hover:bg-surface-700/50 text-surface-400 font-medium border border-surface-700/30">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                Test notification
+            </button>
         </div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden text-center py-6">
+            <div class="inline-flex items-center gap-3 text-surface-400">
+                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Loading data…</span>
+            </div>
+        </div>
+
+        <!-- Timestamp -->
+        <footer id="timestamp" class="text-center text-surface-600 text-sm font-mono"></footer>
     </div>
 
     <script>
@@ -230,16 +225,15 @@
             plugins: { legend: { display: false } },
             scales: {
                 x: { display: false },
-                y: {
-                    display: false,
-                    grace: '10%'
-                }
+                y: { display: false, grace: '10%' }
             },
             elements: {
-                line: { borderWidth: 1.5, tension: 0.3 },
+                line: { borderWidth: 2, tension: 0.35 },
                 point: { radius: 0 }
             }
         };
+        const lineColor = 'rgba(34, 211, 238, 0.85)';
+        const fillColor = 'rgba(34, 211, 238, 0.1)';
 
         window.addEventListener('DOMContentLoaded', () => { loadCurrentData(); loadHistory(); });
 
@@ -258,14 +252,12 @@
                 { key: 'gdp_growth', canvasId: 'chart-gdp' },
                 { key: 'inflation', canvasId: 'chart-inflation' },
                 { key: 'unemployment', canvasId: 'chart-unemployment' },
-                { key: 'ism_pmi', canvasId: 'chart-ism' },
+                { key: 'manufacturing_index', canvasId: 'chart-manufacturing' },
                 { key: 'real_rate', canvasId: 'chart-rate' },
                 { key: 'yield_spread', canvasId: 'chart-spread' },
                 { key: 'fed_funds', canvasId: 'chart-fed' },
                 { key: 'fed_stance', canvasId: 'chart-stance' }
             ];
-            const lineColor = 'rgba(251, 191, 36, 0.9)';
-            const fillColor = 'rgba(251, 191, 36, 0.15)';
             metrics.forEach(({ key, canvasId }) => {
                 const arr = history[key] || [];
                 if (sparklineCharts[canvasId]) {
@@ -289,7 +281,7 @@
                 });
             });
         }
-        
+
         async function loadCurrentData() {
             try {
                 const response = await fetch('/api/current-data');
@@ -299,18 +291,15 @@
                 showError('Failed to load data: ' + error.message);
             }
         }
-        
+
         async function refreshData() {
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
-            
             loading.classList.remove('hidden');
             error.classList.add('hidden');
-            
             try {
                 const response = await fetch('/api/update-data');
                 const result = await response.json();
-                
                 if (result.success) {
                     updateDisplay(result.data);
                     if (result.signal) updateSignal(result.signal);
@@ -328,85 +317,97 @@
         async function generateAISummary() {
             const el = document.getElementById('ai-summary');
             const btn = document.getElementById('btn-ai-summary');
-            const origText = btn.textContent;
-            el.textContent = '⏳ Generating AI overview...';
+            const origHtml = btn.innerHTML;
+            el.innerHTML = '<span class="text-surface-500">Generating AI overview…</span>';
             btn.disabled = true;
-            btn.textContent = 'Generating...';
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Generating…';
             try {
                 const response = await fetch('/api/generate-ai-summary');
                 const result = await response.json();
                 if (result.success) {
                     el.textContent = result.ai_summary || 'No summary returned.';
                 } else {
-                    el.textContent = 'Error: ' + (result.error || 'Failed to generate overview.');
+                    el.innerHTML = '<span class="text-rose-400">Error: ' + (result.error || 'Failed to generate overview.') + '</span>';
                 }
             } catch (error) {
-                el.textContent = 'Error: ' + error.message;
+                el.innerHTML = '<span class="text-rose-400">Error: ' + error.message + '</span>';
             } finally {
                 btn.disabled = false;
-                btn.textContent = origText;
+                btn.innerHTML = origHtml;
             }
         }
-        
+
         function updateDisplay(data) {
-            document.getElementById('gdp-value').textContent = 
-                data.gdp_growth ? data.gdp_growth.toFixed(2) + '%' : 'N/A';
-            
-            document.getElementById('inflation-value').textContent = 
-                data.inflation ? data.inflation.toFixed(2) + '%' : 'N/A';
-            
-            document.getElementById('rate-value').textContent = 
-                data.real_rate ? data.real_rate.toFixed(2) + '%' : 'N/A';
-            
-            document.getElementById('unemployment-value').textContent = 
-                data.unemployment ? data.unemployment.toFixed(1) + '%' : 'N/A';
-            
-            document.getElementById('ism-value').textContent = 
-                data.ism_pmi ? data.ism_pmi.toFixed(1) : 'N/A';
-            
-            document.getElementById('spread-value').textContent = 
-                data.yield_spread ? (data.yield_spread * 100).toFixed(0) + ' bps' : 'N/A';
-            
-            document.getElementById('fed-value').textContent = 
-                data.fed_funds ? data.fed_funds.toFixed(2) + '%' : 'N/A';
-            
-            document.getElementById('stance-value').textContent = 
-                data.fed_stance ? data.fed_stance.toFixed(2) + '%' : 'N/A';
-            
+            const regimeEl = document.getElementById('regime-score-value');
+            regimeEl.textContent = data.macro_regime_score != null ? data.macro_regime_score.toFixed(1) : '—';
+            document.getElementById('gdp-value').textContent = data.gdp_growth != null ? data.gdp_growth.toFixed(2) + '%' : '—';
+            document.getElementById('inflation-value').textContent = data.inflation != null ? data.inflation.toFixed(2) + '%' : '—';
+            document.getElementById('rate-value').textContent = data.real_rate != null ? data.real_rate.toFixed(2) + '%' : '—';
+            document.getElementById('unemployment-value').textContent = data.unemployment != null ? data.unemployment.toFixed(1) + '%' : '—';
+            document.getElementById('manufacturing-value').textContent = data.manufacturing_index != null ? data.manufacturing_index.toFixed(1) : '—';
+            document.getElementById('spread-value').textContent = data.yield_spread != null ? (data.yield_spread * 100).toFixed(0) + ' bps' : '—';
+            document.getElementById('fed-value').textContent = data.fed_funds != null ? data.fed_funds.toFixed(2) + '%' : '—';
+            document.getElementById('stance-value').textContent = data.fed_stance != null ? data.fed_stance.toFixed(2) + '%' : '—';
             if (data && data.ai_summary) {
                 document.getElementById('ai-summary').textContent = data.ai_summary;
             }
-
             if (data.created_at) {
                 const date = new Date(data.created_at);
-                document.getElementById('timestamp').textContent = 
-                    'Last updated: ' + date.toLocaleString();
+                document.getElementById('timestamp').textContent = 'Last updated ' + date.toLocaleString();
             }
         }
-        
+
         function updateSignal(signal) {
-            const signalEl = document.getElementById('signal');
-            signalEl.textContent = signal.action;
-            
-            const colors = {
-                'BUY': 'bg-emerald-500 text-white',
-                'SELL': 'bg-red-500 text-white',
-                'HOLD': 'bg-amber-500 text-white'
+            const el = document.getElementById('signal');
+            el.textContent = '';
+            const dot = document.createElement('span');
+            dot.className = 'w-2.5 h-2.5 rounded-full shrink-0';
+            const label = document.createElement('span');
+            label.textContent = signal.action;
+
+            const styles = {
+                BUY: 'bg-accent-emerald/90 text-surface-950 signal-badge',
+                SELL: 'bg-accent-rose/90 text-white signal-badge',
+                HOLD: 'bg-accent-amber/90 text-surface-950 signal-badge'
             };
-            
-            signalEl.className = 'inline-block px-8 py-4 rounded-lg text-2xl font-bold ' + 
-                (colors[signal.action] || 'bg-amber-500 text-white');
+            const dotColors = { BUY: 'bg-accent-emerald', SELL: 'bg-accent-rose', HOLD: 'bg-accent-amber' };
+
+            const base = 'inline-flex items-center gap-3 px-8 py-4 rounded-xl text-xl font-semibold border ';
+            el.className = base + (styles[signal.action] || 'bg-surface-800/80 border-surface-700/50 text-surface-300');
+            dot.className = 'w-2.5 h-2.5 rounded-full shrink-0 ' + (dotColors[signal.action] || 'bg-surface-500');
+            el.appendChild(dot);
+            el.appendChild(label);
         }
-        
+
         function showError(message) {
             const error = document.getElementById('error');
-            const errorText = document.getElementById('error-text');
-            errorText.textContent = message;
+            document.getElementById('error-text').textContent = message;
             error.classList.remove('hidden');
         }
-        
+
         async function sendTestNotification() {
-            alert('Test notification sent! Check your phone.\n\nMake sure you\'ve subscribed to the ntfy.sh topic in the app.');
+            const btn = event.target;
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Sending…';
+            
+            try {
+                const response = await fetch('/api/test-notification', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Test notification sent!\n\nCheck your ntfy.sh app or browser.\nTopic: ' + (result.topic || 'your-topic'));
+                } else {
+                    alert('❌ Failed to send notification:\n' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
         }
     </script>
 </body>

@@ -6,7 +6,7 @@ class Notifier:
     
     def __init__(self):
         # Your unique topic name - choose something unique like "macro-tracker-yourname-12345"
-        self.ntfy_topic = os.getenv('NTFY_TOPIC', 'macro-tracker-demo')
+        self.ntfy_topic = os.getenv('NTFY_TOPIC')
         self.ntfy_url = f'https://ntfy.sh/{self.ntfy_topic}'
     
     def send_notification(self, title, message, priority='default', tags=None):

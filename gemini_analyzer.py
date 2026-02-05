@@ -68,7 +68,7 @@ CURRENT MACRO DATA:
 - GDP Growth: {data.get('gdp_growth', 'N/A')}% YoY
 - Inflation (CPI): {data.get('inflation', 'N/A')}% YoY
 - Unemployment: {data.get('unemployment', 'N/A')}%
-- ISM Manufacturing PMI: {data.get('ism_pmi', 'N/A')}
+- Manufacturing Index: {data.get('manufacturing_index', 'N/A')}
 - 10Y Real Rate (TIPS): {data.get('real_rate', 'N/A')}%
 - 2Y-10Y Yield Spread: {data.get('yield_spread', 'N/A')}% ({yield_curve})
 - Fed Funds Rate: {data.get('fed_funds', 'N/A')}%
@@ -92,7 +92,7 @@ if __name__ == '__main__':
         'gdp_growth': 4.40,
         'inflation': 2.65,
         'unemployment': 4.1,
-        'ism_pmi': 52.3,
+        'manufacturing_index': 10.0,
         'real_rate': 1.92,
         'yield_spread': 0.15,
         'fed_funds': 4.50,

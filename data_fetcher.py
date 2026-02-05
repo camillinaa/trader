@@ -135,7 +135,7 @@ class MacroDataFetcher:
         inflation = self.fetch_inflation_yoy_history(days)
         time.sleep(0.15)
         unemployment = _fetch('UNRATE')
-        ism_pmi = _fetch('MANEMP')
+        manufacturing_index = _fetch('GACDISA066MSFRBNY')
         real_rate = _fetch('DFII10')
         yield_spread = _fetch('T10Y2Y')
         fed_funds = _fetch('FEDFUNDS')
@@ -144,7 +144,7 @@ class MacroDataFetcher:
             'gdp_growth': gdp,
             'inflation': inflation,
             'unemployment': unemployment,
-            'ism_pmi': ism_pmi,
+            'manufacturing_index': manufacturing_index,
             'real_rate': real_rate,
             'yield_spread': yield_spread,
             'fed_funds': fed_funds,
@@ -217,12 +217,12 @@ class MacroDataFetcher:
         result = self.fetch_fred_data('UNRATE')
         return result['value'] if result else None
     
-    def fetch_ism_pmi(self):
+    def fetch_manufacturing_index(self):
         """
-        Fetch ISM Manufacturing PMI
-        Series: MANEMP (ISM Manufacturing: PMI Composite Index)
+        Fetch manufacturing index
+        Series: GACDISA066MSFRBNY (New York Fed Empire State Manufacturing Survey: General Business Conditions Index)
         """
-        result = self.fetch_fred_data('MANEMP')
+        result = self.fetch_fred_data('GACDISA066MSFRBNY')
         return result['value'] if result else None
     
     def fetch_yield_spread_2_10(self):
@@ -264,14 +264,14 @@ class MacroDataFetcher:
             'inflation': self.fetch_inflation_yoy(),
             'real_rate': self.fetch_real_treasury_rate(),
             'unemployment': self.fetch_unemployment_rate(),
-            'ism_pmi': self.fetch_ism_pmi(),
+            'manufacturing_index': self.fetch_manufacturing_index(),
             'yield_spread': self.fetch_yield_spread_2_10(),
             'fed_funds': fed_funds,
             'neutral_rate': neutral,
             'fed_stance': fed_funds - neutral if fed_funds else None,
             'timestamp': datetime.now().isoformat()
         }
-
+        
 # Example usage
 if __name__ == '__main__':
     fetcher = MacroDataFetcher()
